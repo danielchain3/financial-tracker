@@ -9,6 +9,7 @@ import (
  	"net/http"
  	"os"
 
+
  	"golang.org/x/oauth2"
  	"golang.org/x/oauth2/google"
  	"google.golang.org/api/sheets/v4"
@@ -23,7 +24,8 @@ func getClient(config *oauth2.Config) *http.Client{
 	token, error := tokenFromFile(token_file)
 
 	if error != nil{
-		token = getTokenFromWeb()
+		token = getTokenFromWeb(config)
+		saveToken(token_file, token)
 	}
 
  	return config.Client(context.Background(), token)
@@ -83,7 +85,7 @@ func main() {
 	}
 
 	// If modifying scopes, delete previously saved token.json
-	config, err := google.ConfigFromJson(b, "https://www.googleapis.com/auth/spreadsheets.readonly")
+	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets.readonly")
 
 	if err != nil {
 		log.Fatalf("Unable to parse file to config: %v", err)
@@ -96,9 +98,24 @@ func main() {
 		log.Fatalf("Unable to retrieve data from sheets: %v", err)
 	}
 
+	// get input for sheets name
+	fmt.Println("Enter Sheets Name: ")
+	var sheetName string
+	fmt.Scan(&sheetName)
+
+	// check to see if sheets exists 
+	// check all active sheets
+	activeSheets, err := srv.Spreadsheets.Values.Get(spreadsheetId).Do()
+	if err != nil{
+		log.Fatalf("Unable to find sheets: %v", err)
+	}
+
+	fmt.Println(activeSheets)
+
+
 	// Prints the names and majors of students in a sample spreadsheet:
     // https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-    spreadsheetId := "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+    /*spreadsheetId := "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
     readRange := "Class Data!A2:E"
     resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
     if err != nil {
@@ -113,7 +130,7 @@ func main() {
                 // Print columns A and E, which correspond to indices 0 and 4.
                 fmt.Printf("%s, %s\n", row[0], row[4])
             }
-    }
+    }*/
 
 }
 
